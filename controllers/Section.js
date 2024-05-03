@@ -1,5 +1,6 @@
 const Section = require("../models/Section");
 const Course = require("../models/Course");
+const SubSection = require("../models/Subsection")
 // CREATE a new section
 exports.createSection = async (req, res) => {
 	try {
@@ -54,15 +55,26 @@ exports.createSection = async (req, res) => {
 // UPDATE a section
 exports.updateSection = async (req, res) => {
 	try {
-		const { sectionName, sectionId } = req.body;
+		const { sectionName, sectionId , courseId} = req.body;
 		const section = await Section.findByIdAndUpdate(
 			sectionId,
 			{ sectionName },
 			{ new: true }
 		);
+
+		const updatedCourse = await Course.findById(courseId)
+											.populate({
+												path: "courseContent",
+												populate: {
+													path: "subSection",
+												},
+											})
+											.exec();
+
 		res.status(200).json({
 			success: true,
 			message: section,
+			updatedCourse
 		});
 	} catch (error) {
 		console.error("Error updating section:", error);
@@ -74,19 +86,50 @@ exports.updateSection = async (req, res) => {
 };
 
 // DELETE a section
-exports.deleteSection = async (req, res) => {
-	try {
-		const { sectionId } = req.params;
-		await Section.findByIdAndDelete(sectionId);
-		res.status(200).json({
-			success: true,
-			message: "Section deleted",
-		});
-	} catch (error) {
-		console.error("Error deleting section:", error);
-		res.status(500).json({
-			success: false,
-			message: "Internal server error",
-		});
-	}
-};
+exports.deleteSection = async (req,res) => {
+    try {
+        
+        const {sectionId, courseId} = req.body;
+
+        if (!sectionId) {
+            return res.status(400).json({
+                success:false,
+                message:'All fields are required',
+            });
+        }
+
+        const sectionDetails = await Section.findById(sectionId);
+        
+        // //Section ke ander ke subsections delete kiye hai 
+        sectionDetails.subSection.forEach( async (ssid)=>{
+            await SubSection.findByIdAndDelete(ssid);
+        })
+        console.log('Subsections within the section deleted')
+        //NOTE: Due to cascading deletion, Mongoose automatically triggers the built-in middleware to perform a cascading delete for all the referenced 
+        //SubSection documents. DOUBTFUL!
+
+        //From course, courseContent the section gets automatically deleted due to cascading delete feature
+        await Section.findByIdAndDelete(sectionId);
+        console.log('Section deleted')
+
+        const updatedCourse = await Course.findById(courseId)
+										.populate({
+											path:"courseContent",
+											populate: {
+												path:"subSection"
+											}})
+											.exec();
+        return res.status(200).json({
+            success:true,
+            message:'Section deleted successfully',
+            updatedCourse
+        })   
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            success:false,
+            message:'Failed to delete Section',
+            error: error.message,
+        })
+    }
+}

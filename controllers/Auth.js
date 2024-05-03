@@ -142,12 +142,16 @@ exports.login = async (req, res) => {
 		// Generate JWT token and Compare Password
 		if (await bcrypt.compare(password, user.password)) {
 			const token = jwt.sign(
-				{ email: user.email, id: user._id, role: user.role },
+				{ email: user.email, id: user._id, accountType: user.accountType },
 				process.env.JWT_SECRET,
 				{
 					expiresIn: "24h",
 				}
 			);
+
+			console.log("email: ",user.email);
+			console.log("id: ",user._id);
+			console.log("accountType: ", user.accountType);
 
 			// Save token to user document in database
 			user.token = token;
@@ -227,6 +231,7 @@ exports.sendotp = async (req, res) => {
 
 // Controller for Changing Password
 exports.changePassword = async (req, res) => {
+	console.log("API hitted");
 	try {
 		// Get user data from req.user
 		const userDetails = await User.findById(req.user.id);
@@ -267,10 +272,8 @@ exports.changePassword = async (req, res) => {
 		try {
 			const emailResponse = await mailSender(
 				updatedUserDetails.email,
-				passwordUpdated(
-					updatedUserDetails.email,
-					`Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`
-				)
+				`Password updated successfully for ${updatedUserDetails.firstName} ${updatedUserDetails.lastName}`,
+				`your request for password updation for ${updatedUserDetails.email} has been successfully achieved`
 			);
 			console.log("Email sent successfully:", emailResponse.response);
 		} catch (error) {

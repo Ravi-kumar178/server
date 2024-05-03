@@ -35,13 +35,11 @@ exports.updateProfile = async (req, res) => {
 
 exports.deleteAccount = async (req, res) => {
 	try {
-		// TODO: Find More on Job Schedule
-		// const job = schedule.scheduleJob("10 * * * * *", function () {
-		// 	console.log("The answer to life, the universe, and everything!");
-		// });
-		// console.log(job);
+		
 		const id = req.user.id;
+		console.log("id: ",id);
 		const user = await User.findById({ _id: id });
+		console.log("user: ",user);
 		if (!user) {
 			return res.status(404).json({
 				success: false,
@@ -95,12 +93,17 @@ exports.updateDisplayPicture = async (req, res) => {
         1000,
         1000
       )
-      console.log(image)
+     /*  console.log("image type: ", typeof(image.secure_url));
+	  console.log("userId: ",userId);
+	  console.log("user: ",User); */
       const updatedProfile = await User.findByIdAndUpdate(
         { _id: userId },
         { image: image.secure_url },
         { new: true }
       )
+
+	  /* console.log("updatedProfile: ",updatedProfile); */
+
       res.send({
         success: true,
         message: `Image Updated successfully`,

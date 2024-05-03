@@ -9,6 +9,7 @@ const userRoutes = require("./routes/User");
 const profileRoutes = require("./routes/Profile");
 const courseRoutes = require("./routes/Course");
 const paymentRoutes = require("./routes/Payments");
+const contact = require("./routes/Contact");
 
 
 
@@ -38,8 +39,10 @@ cloudinaryConnect();
 //routes
 app.use("/api/v1/auth",userRoutes);
 app.use("/api/v1/profile",profileRoutes);
-app.use("/api/v1/",courseRoutes);
+app.use("/api/v1/course",courseRoutes);
 app.use("/api/v1/payment",paymentRoutes);
+app.use("/api/v1", contact);
+
 
 //def route
 app.get("/",(req,res)=>{
